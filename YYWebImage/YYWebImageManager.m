@@ -76,11 +76,13 @@ static UIApplication *_YYSharedApplication() {
     return self;
 }
 
-- (YYWebImageOperation *)requestImageWithURL:(NSURL *)url
-                                     options:(YYWebImageOptions)options
-                                    progress:(YYWebImageProgressBlock)progress
-                                   transform:(YYWebImageTransformBlock)transform
-                                  completion:(YYWebImageCompletionBlock)completion {
+
+- (nullable YYWebImageOperation *)requestImageWithURL:(NSURL *)url
+                                              options:(YYWebImageOptions)options
+                                             progress:(nullable YYWebImageProgressBlock)progress
+                                        transformType:(NSUInteger)transformType
+                                            transform:(nullable YYWebImageTransformBlock)transform
+                                           completion:(nullable YYWebImageCompletionBlock)completion {
     
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
     request.timeoutInterval = _timeout;
@@ -88,16 +90,16 @@ static UIApplication *_YYSharedApplication() {
     request.allHTTPHeaderFields = [self headersForURL:url];
     request.HTTPShouldUsePipelining = YES;
     request.cachePolicy = (options & YYWebImageOptionUseNSURLCache) ?
-        NSURLRequestUseProtocolCachePolicy : NSURLRequestReloadIgnoringLocalCacheData;
+    NSURLRequestUseProtocolCachePolicy : NSURLRequestReloadIgnoringLocalCacheData;
     
     YYWebImageOperation *operation = [[YYWebImageOperation alloc] initWithRequest:request
                                                                           options:options
                                                                             cache:_cache
                                                                          cacheKey:[self cacheKeyForURL:url]
                                                                          progress:progress
-                                                                        transform:transform ? transform : _sharedTransformBlock
+                                                                    transformType:transformType                             transform:transform ? transform : _sharedTransformBlock
                                                                        completion:completion];
-
+    
     if (_username && _password) {
         operation.credential = [NSURLCredential credentialWithUser:_username password:_password persistence:NSURLCredentialPersistenceForSession];
     }

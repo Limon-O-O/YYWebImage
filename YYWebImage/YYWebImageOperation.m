@@ -241,16 +241,17 @@ static void URLInBlackListAdd(NSURL *url) {
 
 - (instancetype)init {
     @throw [NSException exceptionWithName:@"YYWebImageOperation init error" reason:@"YYWebImageOperation must be initialized with a request. Use the designated initializer to init." userInfo:nil];
-    return [self initWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@""]] options:0 cache:nil cacheKey:nil progress:nil transform:nil completion:nil];
+    return [self initWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@""]] options:0 cache:nil cacheKey:nil progress:nil transformType:0 transform:nil completion:nil];
 }
 
 - (instancetype)initWithRequest:(NSURLRequest *)request
                         options:(YYWebImageOptions)options
-                          cache:(YYImageCache *)cache
-                       cacheKey:(NSString *)cacheKey
-                       progress:(YYWebImageProgressBlock)progress
-                      transform:(YYWebImageTransformBlock)transform
-                     completion:(YYWebImageCompletionBlock)completion {
+                          cache:(nullable YYImageCache *)cache
+                       cacheKey:(nullable NSString *)cacheKey
+                       progress:(nullable YYWebImageProgressBlock)progress
+                  transformType:(NSUInteger)transformType
+                      transform:(nullable YYWebImageTransformBlock)transform
+                     completion:(nullable YYWebImageCompletionBlock)completion {
     self = [super init];
     if (!self) return nil;
     if (!request) return nil;
@@ -261,6 +262,15 @@ static void URLInBlackListAdd(NSURL *url) {
     _shouldUseCredentialStorage = YES;
     _progress = progress;
     _transform = transform;
+    
+    if (_transform != nil) {
+        NSString *suffix = [NSString stringWithFormat:@"_%@", @(transformType)];
+        _transformCacheKey = [_cacheKey stringByAppendingString:suffix];
+    }
+    else {
+        _transformCacheKey = nil;
+    }
+    
     _completion = completion;
     _executing = NO;
     _finished = NO;
@@ -319,7 +329,19 @@ static void URLInBlackListAdd(NSURL *url) {
         if (_cache &&
             !(_options & YYWebImageOptionUseNSURLCache) &&
             !(_options & YYWebImageOptionRefreshImageCache)) {
-            UIImage *image = [_cache getImageForKey:_cacheKey withType:YYImageCacheTypeMemory];
+            UIImage *image = nil;
+            if (_transformCacheKey) {
+                image = [_cache getImageForKey:_transformCacheKey withType:YYImageCacheTypeMemory];
+            }
+            
+            if (image == nil) {
+                image = [_cache getImageForKey:_cacheKey withType:YYImageCacheTypeMemory];
+                if (_transform && image) {
+                    image = _transform(image, _request.URL);
+                    [_cache setImage:image forKey:_transformCacheKey];
+                }
+            }
+            
             if (image) {
                 [_lock lock];
                 if (![self isCancelled]) {
@@ -334,9 +356,26 @@ static void URLInBlackListAdd(NSURL *url) {
                 dispatch_async([self.class _imageQueue], ^{
                     __strong typeof(_self) self = _self;
                     if (!self || [self isCancelled]) return;
-                    UIImage *image = [self.cache getImageForKey:self.cacheKey withType:YYImageCacheTypeDisk];
+                    UIImage *image = nil;
+                    NSString *memoryCacheKey = self.cacheKey;
+                    
+                    if (_transformCacheKey) {
+                        image = [self.cache getImageForKey:self.transformCacheKey withType:YYImageCacheTypeDisk];
+                        if (image) {
+                            memoryCacheKey = self.transformCacheKey;
+                        }
+                    }
+                    
+                    if (image == nil) {
+                        image = [self.cache getImageForKey:self.cacheKey withType:YYImageCacheTypeDisk];
+                        if (_transform && image) {
+                            image = _transform(image, _request.URL);
+                            [_cache setImage:image forKey:_transformCacheKey];
+                        }
+                    }
+
                     if (image) {
-                        [self.cache setImage:image imageData:nil forKey:self.cacheKey withType:YYImageCacheTypeMemory];
+                        [self.cache setImage:image imageData:nil forKey:memoryCacheKey withType:YYImageCacheTypeMemory];
                         [self performSelector:@selector(_didReceiveImageFromDiskCache:) onThread:[self.class _networkThread] withObject:image waitUntilDone:NO];
                     } else {
                         [self performSelector:@selector(_startRequest:) onThread:[self.class _networkThread] withObject:nil waitUntilDone:NO];
@@ -414,16 +453,22 @@ static void URLInBlackListAdd(NSURL *url) {
         [_lock unlock];
     }
 }
-
-- (void)_didReceiveImageFromWeb:(UIImage *)image {
+// images : "webImage", "transformImage"
+- (void)_didReceiveImageFromWeb:(NSDictionary *)images {
     @autoreleasepool {
         [_lock lock];
         if (![self isCancelled]) {
+            UIImage *image = images[@"webImage"];
+            UIImage *transformImage = images[@"transformImage"];
+            
             if (_cache) {
                 if (image || (_options & YYWebImageOptionRefreshImageCache)) {
                     NSData *data = _data;
                     dispatch_async([YYWebImageOperation _imageQueue], ^{
                         [_cache setImage:image imageData:data forKey:_cacheKey withType:YYImageCacheTypeAll];
+                        if (transformImage) {
+                            [_cache setImage:transformImage forKey:_transformCacheKey];
+                        }
                     });
                 }
             }
@@ -439,7 +484,7 @@ static void URLInBlackListAdd(NSURL *url) {
                     }
                 }
             }
-            if (_completion) _completion(image, _request.URL, YYWebImageFromRemote, YYWebImageStageFinished, error);
+            if (_completion) _completion(transformImage?:image, _request.URL, YYWebImageFromRemote, YYWebImageStageFinished, error);
             [self _finish];
         }
         [_lock unlock];
@@ -694,11 +739,19 @@ static void URLInBlackListAdd(NSURL *url) {
                     if (newImage != image) {
                         self.data = nil;
                     }
-                    image = newImage;
+                    
+//                    image = newImage;
                     if ([self isCancelled]) return;
+                    
+                    // images : "webImage", "transformImage"
+                    NSDictionary *images = @{@"webImage": image, @"transformImage":newImage};
+                    [self performSelector:@selector(_didReceiveImageFromWeb:) onThread:[self.class _networkThread] withObject:images waitUntilDone:NO];
                 }
-                
-                [self performSelector:@selector(_didReceiveImageFromWeb:) onThread:[self.class _networkThread] withObject:image waitUntilDone:NO];
+                else {
+                    // images : "webImage", "transformImage"
+                    NSDictionary *images = @{@"webImage": image};
+                    [self performSelector:@selector(_didReceiveImageFromWeb:) onThread:[self.class _networkThread] withObject:images waitUntilDone:NO];
+                }
             });
             if (![self.request.URL isFileURL] && (self.options & YYWebImageOptionShowNetworkActivity)) {
                 [YYWebImageManager decrementNetworkActivityCount];

@@ -172,8 +172,8 @@ static int _YYWebImageSetterKey;
                     }
                 });
             };
-            
-            newSentinel = [setter setOperationWithSentinel:sentinel url:imageURL options:options manager:manager progress:_progress transform:transform completion:_completion];
+#warning 这里没有修改类型
+            newSentinel = [setter setOperationWithSentinel:sentinel url:imageURL options:options manager:manager progress:_progress transformType:0 transform:transform completion:_completion];
             weakSetter = setter;
         });
         

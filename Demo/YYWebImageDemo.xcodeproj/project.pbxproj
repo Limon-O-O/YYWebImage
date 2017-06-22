@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		197964151EFB9AEA002437BE /* YYTransformImageExample.m in Sources */ = {isa = PBXBuildFile; fileRef = 197964141EFB9AEA002437BE /* YYTransformImageExample.m */; };
 		ABC4238E1BE3244A00703518 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = ABC4238D1BE3244A00703518 /* main.m */; };
 		ABC423911BE3244A00703518 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = ABC423901BE3244A00703518 /* AppDelegate.m */; };
 		ABC423941BE3244A00703518 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = ABC423931BE3244A00703518 /* ViewController.m */; };
@@ -66,6 +67,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		197964131EFB9AEA002437BE /* YYTransformImageExample.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YYTransformImageExample.h; sourceTree = "<group>"; };
+		197964141EFB9AEA002437BE /* YYTransformImageExample.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YYTransformImageExample.m; sourceTree = "<group>"; };
 		ABC423891BE3244A00703518 /* YYWebImageDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YYWebImageDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ABC4238D1BE3244A00703518 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		ABC4238F1BE3244A00703518 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -211,6 +214,8 @@
 				ABC423FA1BE325EF00703518 /* YYWebImageExample.m */,
 				ABC423FD1BE325EF00703518 /* YYImageExampleHelper.h */,
 				ABC423FE1BE325EF00703518 /* YYImageExampleHelper.m */,
+				197964131EFB9AEA002437BE /* YYTransformImageExample.h */,
+				197964141EFB9AEA002437BE /* YYTransformImageExample.m */,
 				ABC424091BE3264600703518 /* Resources */,
 				ABC424081BE3262E00703518 /* Not available */,
 				ABC4238C1BE3244A00703518 /* Supporting Files */,
@@ -454,6 +459,7 @@
 				ABC423D31BE324F000703518 /* YYMemoryCache.m in Sources */,
 				ABC4238E1BE3244A00703518 /* main.m in Sources */,
 				ABC423DC1BE324F000703518 /* YYImage.m in Sources */,
+				197964151EFB9AEA002437BE /* YYTransformImageExample.m in Sources */,
 				ABC423E11BE324F000703518 /* YYWebImageOperation.m in Sources */,
 				ABC424041BE325EF00703518 /* YYWebImageExample.m in Sources */,
 				ABC423D41BE324F000703518 /* _YYWebImageSetter.m in Sources */,

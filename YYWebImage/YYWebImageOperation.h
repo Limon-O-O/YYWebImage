@@ -43,6 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nullable, nonatomic, strong, readonly) NSURLResponse     *response; ///< The response for request.
 @property (nullable, nonatomic, strong, readonly) YYImageCache      *cache;    ///< The image cache.
 @property (nonatomic, strong, readonly)           NSString          *cacheKey; ///< The image cache key.
+@property (nonatomic, strong, readonly)           NSString          *transformCacheKey; ///< The transform image cache key.
 @property (nonatomic, readonly)                   YYWebImageOptions options;   ///< The operation's option.
 
 /**
@@ -86,6 +87,7 @@ NS_ASSUME_NONNULL_BEGIN
                           cache:(nullable YYImageCache *)cache
                        cacheKey:(nullable NSString *)cacheKey
                        progress:(nullable YYWebImageProgressBlock)progress
+                  transformType:(NSUInteger)transformType
                       transform:(nullable YYWebImageTransformBlock)transform
                      completion:(nullable YYWebImageCompletionBlock)completion NS_DESIGNATED_INITIALIZER;
 

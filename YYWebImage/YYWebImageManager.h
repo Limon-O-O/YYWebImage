@@ -191,6 +191,7 @@ typedef void (^YYWebImageCompletionBlock)(UIImage * _Nullable image,
  @param url        The image url (remote or local file path).
  @param options    The options to control image operation.
  @param progress   Progress block which will be invoked on background thread (pass nil to avoid).
+ @param transformType The type of transform images after the cache
  @param transform  Transform block which will be invoked on background thread  (pass nil to avoid).
  @param completion Completion block which will be invoked on background thread  (pass nil to avoid).
  @return A new image operation.
@@ -198,6 +199,7 @@ typedef void (^YYWebImageCompletionBlock)(UIImage * _Nullable image,
 - (nullable YYWebImageOperation *)requestImageWithURL:(NSURL *)url
                                               options:(YYWebImageOptions)options
                                              progress:(nullable YYWebImageProgressBlock)progress
+                                        transformType:(NSUInteger)transformType
                                             transform:(nullable YYWebImageTransformBlock)transform
                                            completion:(nullable YYWebImageCompletionBlock)completion;
 
