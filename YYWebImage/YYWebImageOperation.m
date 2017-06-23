@@ -241,7 +241,7 @@ static void URLInBlackListAdd(NSURL *url) {
 
 - (instancetype)init {
     @throw [NSException exceptionWithName:@"YYWebImageOperation init error" reason:@"YYWebImageOperation must be initialized with a request. Use the designated initializer to init." userInfo:nil];
-    return [self initWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@""]] options:0 cache:nil cacheKey:nil progress:nil transformType:0 transform:nil completion:nil];
+    return [self initWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@""]] options:0 cache:nil cacheKey:nil progress:nil transformId:nil transform:nil completion:nil];
 }
 
 - (instancetype)initWithRequest:(NSURLRequest *)request
@@ -249,7 +249,7 @@ static void URLInBlackListAdd(NSURL *url) {
                           cache:(nullable YYImageCache *)cache
                        cacheKey:(nullable NSString *)cacheKey
                        progress:(nullable YYWebImageProgressBlock)progress
-                  transformType:(NSUInteger)transformType
+                    transformId:(NSString *)transformId
                       transform:(nullable YYWebImageTransformBlock)transform
                      completion:(nullable YYWebImageCompletionBlock)completion {
     self = [super init];
@@ -263,9 +263,8 @@ static void URLInBlackListAdd(NSURL *url) {
     _progress = progress;
     _transform = transform;
     
-    if (_transform != nil) {
-        NSString *suffix = [NSString stringWithFormat:@"_%@", @(transformType)];
-        _transformCacheKey = [_cacheKey stringByAppendingString:suffix];
+    if (_transform && transformId) {
+        _transformCacheKey = [_cacheKey stringByAppendingString:transformId];
     }
     else {
         _transformCacheKey = nil;
@@ -325,22 +324,32 @@ static void URLInBlackListAdd(NSURL *url) {
 - (void)_startOperation {
     if ([self isCancelled]) return;
     @autoreleasepool {
+        
         // get image from cache
         if (_cache &&
             !(_options & YYWebImageOptionUseNSURLCache) &&
             !(_options & YYWebImageOptionRefreshImageCache)) {
+            
             UIImage *image = nil;
-            if (_transformCacheKey) {
-                image = [_cache getImageForKey:_transformCacheKey withType:YYImageCacheTypeMemory];
+            
+            //尝试从Disk里面提取
+            //Try to extract oil from the Disk
+            if (!(_options & YYWebImageOptionIgnoreDiskCache) &&
+                _transform && _transformCacheKey) {
+                //前面为了快速显示图片，只是从内存里面尝试提取图片
+                //Front to display images quickly, just try to extract oil from the memory images
+                image = [_cache getImageForKey:_transformCacheKey withType:YYImageCacheTypeDisk];
             }
             
             if (image == nil) {
                 image = [_cache getImageForKey:_cacheKey withType:YYImageCacheTypeMemory];
-                if (_transform && image) {
+                
+                if (_transform && image && _transformCacheKey) {
                     image = _transform(image, _request.URL);
                     [_cache setImage:image forKey:_transformCacheKey];
                 }
             }
+            
             
             if (image) {
                 [_lock lock];
@@ -351,31 +360,24 @@ static void URLInBlackListAdd(NSURL *url) {
                 [_lock unlock];
                 return;
             }
+            
             if (!(_options & YYWebImageOptionIgnoreDiskCache)) {
                 __weak typeof(self) _self = self;
                 dispatch_async([self.class _imageQueue], ^{
                     __strong typeof(_self) self = _self;
                     if (!self || [self isCancelled]) return;
-                    UIImage *image = nil;
-                    NSString *memoryCacheKey = self.cacheKey;
-                    
-                    if (_transformCacheKey) {
-                        image = [self.cache getImageForKey:self.transformCacheKey withType:YYImageCacheTypeDisk];
-                        if (image) {
-                            memoryCacheKey = self.transformCacheKey;
-                        }
-                    }
-                    
-                    if (image == nil) {
-                        image = [self.cache getImageForKey:self.cacheKey withType:YYImageCacheTypeDisk];
-                        if (_transform && image) {
-                            image = _transform(image, _request.URL);
-                            [_cache setImage:image forKey:_transformCacheKey];
-                        }
+                    UIImage *image = [self.cache getImageForKey:self.cacheKey withType:YYImageCacheTypeDisk];
+
+                    if (_transform && image && _transformCacheKey) {
+                        image = _transform(image, _request.URL);
+                        [_cache setImage:image forKey:_transformCacheKey];
                     }
 
                     if (image) {
-                        [self.cache setImage:image imageData:nil forKey:memoryCacheKey withType:YYImageCacheTypeMemory];
+                        if (!(_transform && image && _transformCacheKey)) {
+                            [self.cache setImage:image imageData:nil forKey:self.cacheKey withType:YYImageCacheTypeMemory];
+                        }
+                        
                         [self performSelector:@selector(_didReceiveImageFromDiskCache:) onThread:[self.class _networkThread] withObject:image waitUntilDone:NO];
                     } else {
                         [self performSelector:@selector(_startRequest:) onThread:[self.class _networkThread] withObject:nil waitUntilDone:NO];
@@ -734,7 +736,7 @@ static void URLInBlackListAdd(NSURL *url) {
                 }
                 if ([self isCancelled]) return;
                 
-                if (self.transform && image) {
+                if (self.transform && image && self.transformCacheKey) {
                     UIImage *newImage = self.transform(image, self.request.URL);
                     if (newImage != image) {
                         self.data = nil;

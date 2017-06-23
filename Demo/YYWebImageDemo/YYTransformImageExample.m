@@ -15,6 +15,7 @@
 
 @interface YYTransformImageExampleCell : UITableViewCell
 @property (nonatomic, strong) UIImageView *avatar;
+@property (nonatomic, strong) UIImageView *avatar2;
 @end
 
 @implementation YYTransformImageExampleCell
@@ -23,9 +24,12 @@
     self = [super initWithStyle:style reuseIdentifier:reuseIdentifier];
     if (self) {
         {
-            self.avatar = [[UIImageView alloc] initWithFrame:CGRectMake(([UIScreen mainScreen].bounds.size.width - 100) / 2.0, 10, 100, 100)];
+            self.avatar = [[UIImageView alloc] initWithFrame:CGRectMake(10, 10, 100, 100)];
             [self.contentView addSubview:self.avatar];
             
+            self.avatar2 = [[UIImageView alloc] initWithFrame:CGRectMake(120, 10, 100, 100)];
+            self.avatar2.highlighted = YES;
+            [self.contentView addSubview:self.avatar2];
         }
         
     }
@@ -95,11 +99,19 @@
     NSInteger type = arc4random() % 5;
     
     UIColor *color = self.borderColors[type];
-    
-    [cell.avatar yy_setImageWithURL:[NSURL URLWithString:@"https://d13yacurqjgara.cloudfront.net/users/26059/screenshots/1466318/getaway.jpg"] placeholder:[UIImage yy_imageWithColor:[UIColor lightGrayColor]] options:0 progress:nil transformType:type transform:^UIImage * _Nullable(UIImage * _Nonnull image, NSURL * _Nonnull url) {
+        
+    [cell.avatar yy_setImageWithURL:[NSURL URLWithString:@"https://d13yacurqjgara.cloudfront.net/users/26059/screenshots/1466318/getaway.jpg"] placeholder:[UIImage yy_imageWithColor:[UIColor lightGrayColor]] options:0 progress:nil transformId:[@(type) stringValue] transform:^UIImage * _Nullable(UIImage * _Nonnull image, NSURL * _Nonnull url) {
     
         return [image yy_imageByRoundCornerRadius:50 borderWidth:10 borderColor:color];
     } completion:nil];
+    
+    [cell.avatar2 yy_setHighlightedImageWithURL:[NSURL URLWithString:@"https://d13yacurqjgara.cloudfront.net/users/288987/screenshots/2025999/batman-beyond-the-rain.gif"] placeholder:[UIImage yy_imageWithColor:[UIColor lightGrayColor]] options:0 progress:nil transformId:[@(type) stringValue] transform:^UIImage * _Nullable(UIImage * _Nonnull image, NSURL * _Nonnull url) {
+        
+        return [image yy_imageByRoundCornerRadius:50 borderWidth:10 borderColor:color];
+    } completion:nil];
+    
+    cell.avatar2.highlighted = YES;
+    
     return cell;
 }
 

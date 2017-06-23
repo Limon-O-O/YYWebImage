@@ -199,7 +199,7 @@ typedef void (^YYWebImageCompletionBlock)(UIImage * _Nullable image,
 - (nullable YYWebImageOperation *)requestImageWithURL:(NSURL *)url
                                               options:(YYWebImageOptions)options
                                              progress:(nullable YYWebImageProgressBlock)progress
-                                        transformType:(NSUInteger)transformType
+                                          transformId:(nullable NSString *)transformId
                                             transform:(nullable YYWebImageTransformBlock)transform
                                            completion:(nullable YYWebImageCompletionBlock)completion;
 

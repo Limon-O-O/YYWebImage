@@ -80,7 +80,7 @@ static UIApplication *_YYSharedApplication() {
 - (nullable YYWebImageOperation *)requestImageWithURL:(NSURL *)url
                                               options:(YYWebImageOptions)options
                                              progress:(nullable YYWebImageProgressBlock)progress
-                                        transformType:(NSUInteger)transformType
+                                          transformId:(nullable NSString *)transformId
                                             transform:(nullable YYWebImageTransformBlock)transform
                                            completion:(nullable YYWebImageCompletionBlock)completion {
     
@@ -97,7 +97,8 @@ static UIApplication *_YYSharedApplication() {
                                                                             cache:_cache
                                                                          cacheKey:[self cacheKeyForURL:url]
                                                                          progress:progress
-                                                                    transformType:transformType                             transform:transform ? transform : _sharedTransformBlock
+                                                                      transformId:transformId
+                                                                        transform:transform ? transform : _sharedTransformBlock
                                                                        completion:completion];
     
     if (_username && _password) {

@@ -83,6 +83,7 @@ static int _YYWebImageBackgroundSetterKey;
                     options:(YYWebImageOptions)options
                     manager:(YYWebImageManager *)manager
                    progress:(YYWebImageProgressBlock)progress
+                transformId:(NSString *)transformId
                   transform:(YYWebImageTransformBlock)transform
                  completion:(YYWebImageCompletionBlock)completion {
     if ([imageURL isKindOfClass:[NSString class]]) imageURL = [NSURL URLWithString:(id)imageURL];
@@ -153,7 +154,7 @@ static int _YYWebImageBackgroundSetterKey;
                 });
             };
             
-            newSentinel = [setter setOperationWithSentinel:sentinel url:imageURL options:options manager:manager progress:_progress transformType:0 transform:transform completion:_completion];
+            newSentinel = [setter setOperationWithSentinel:sentinel url:imageURL options:options manager:manager progress:_progress transformId:transformId transform:transform completion:_completion];
             weakSetter = setter;
         });
     });
@@ -244,6 +245,48 @@ static int _YYWebImageBackgroundSetterKey;
                           options:options
                           manager:manager
                          progress:progress
+                      transformId:@"0"
+                        transform:transform
+                       completion:completion];
+    }
+}
+
+- (void)yy_setImageWithURL:(nullable NSURL *)imageURL
+                  forState:(UIControlState)state
+               placeholder:(nullable UIImage *)placeholder
+                   options:(YYWebImageOptions)options
+                  progress:(nullable YYWebImageProgressBlock)progress
+               transformId:(nullable NSString *)transformId
+                 transform:(nullable YYWebImageTransformBlock)transform
+                completion:(nullable YYWebImageCompletionBlock)completion {
+    [self yy_setImageWithURL:imageURL
+                    forState:state
+                 placeholder:placeholder
+                     options:options
+                     manager:nil
+                    progress:progress
+                 transformId:transformId
+                   transform:transform
+                  completion:completion];
+}
+
+- (void)yy_setImageWithURL:(nullable NSURL *)imageURL
+                  forState:(UIControlState)state
+               placeholder:(nullable UIImage *)placeholder
+                   options:(YYWebImageOptions)options
+                   manager:(nullable YYWebImageManager *)manager
+                  progress:(nullable YYWebImageProgressBlock)progress
+               transformId:(nullable NSString *)transformId
+                 transform:(nullable YYWebImageTransformBlock)transform
+                completion:(nullable YYWebImageCompletionBlock)completion {
+    for (NSNumber *num in UIControlStateMulti(state)) {
+        [self _yy_setImageWithURL:imageURL
+                   forSingleState:num
+                      placeholder:placeholder
+                          options:options
+                          manager:manager
+                         progress:progress
+                      transformId:transformId
                         transform:transform
                        completion:completion];
     }
@@ -264,6 +307,7 @@ static int _YYWebImageBackgroundSetterKey;
                               options:(YYWebImageOptions)options
                               manager:(YYWebImageManager *)manager
                              progress:(YYWebImageProgressBlock)progress
+                          transformId:(NSString *)transformId
                             transform:(YYWebImageTransformBlock)transform
                            completion:(YYWebImageCompletionBlock)completion {
     if ([imageURL isKindOfClass:[NSString class]]) imageURL = [NSURL URLWithString:(id)imageURL];
@@ -334,7 +378,7 @@ static int _YYWebImageBackgroundSetterKey;
                 });
             };
             
-            newSentinel = [setter setOperationWithSentinel:sentinel url:imageURL options:options manager:manager progress:_progress transformType:0 transform:transform completion:_completion];
+            newSentinel = [setter setOperationWithSentinel:sentinel url:imageURL options:options manager:manager progress:_progress transformId:nil transform:transform completion:_completion];
             weakSetter = setter;
         });
     });
@@ -425,6 +469,49 @@ static int _YYWebImageBackgroundSetterKey;
                                     options:options
                                     manager:manager
                                    progress:progress
+                                transformId:@"0"
+                                  transform:transform
+                                 completion:completion];
+    }
+}
+
+
+- (void)yy_setBackgroundImageWithURL:(nullable NSURL *)imageURL
+                            forState:(UIControlState)state
+                         placeholder:(nullable UIImage *)placeholder
+                             options:(YYWebImageOptions)options
+                            progress:(nullable YYWebImageProgressBlock)progress
+                         transformId:(nullable NSString *)transformId
+                           transform:(nullable YYWebImageTransformBlock)transform
+                          completion:(nullable YYWebImageCompletionBlock)completion {
+    [self yy_setBackgroundImageWithURL:imageURL
+                              forState:state
+                           placeholder:placeholder
+                               options:options
+                               manager:nil
+                              progress:progress
+                           transformId:transformId
+                             transform:transform
+                            completion:completion];
+}
+
+- (void)yy_setBackgroundImageWithURL:(nullable NSURL *)imageURL
+                            forState:(UIControlState)state
+                         placeholder:(nullable UIImage *)placeholder
+                             options:(YYWebImageOptions)options
+                             manager:(nullable YYWebImageManager *)manager
+                            progress:(nullable YYWebImageProgressBlock)progress
+                         transformId:(nullable NSString *)transformId
+                           transform:(nullable YYWebImageTransformBlock)transform
+                          completion:(nullable YYWebImageCompletionBlock)completion {
+    for (NSNumber *num in UIControlStateMulti(state)) {
+        [self _yy_setBackgroundImageWithURL:imageURL
+                             forSingleState:num
+                                placeholder:placeholder
+                                    options:options
+                                    manager:manager
+                                   progress:progress
+                                transformId:transformId
                                   transform:transform
                                  completion:completion];
     }

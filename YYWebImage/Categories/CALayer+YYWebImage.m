@@ -93,6 +93,42 @@ static int _YYWebImageSetterKey;
                   progress:(YYWebImageProgressBlock)progress
                  transform:(YYWebImageTransformBlock)transform
                 completion:(YYWebImageCompletionBlock)completion {
+    [self yy_setImageWithURL:imageURL
+                 placeholder:placeholder
+                     options:options
+                     manager:manager
+                    progress:progress
+                 transformId:@"0"
+                   transform:transform
+                  completion:completion];
+    
+}
+
+- (void)yy_setImageWithURL:(NSURL *)imageURL
+               placeholder:(UIImage *)placeholder
+                   options:(YYWebImageOptions)options
+                  progress:(YYWebImageProgressBlock)progress
+               transformId:(NSString *)transformId
+                 transform:(YYWebImageTransformBlock)transform
+                completion:(YYWebImageCompletionBlock)completion {
+    [self yy_setImageWithURL:imageURL
+                 placeholder:placeholder
+                     options:options
+                     manager:nil
+                    progress:progress
+                 transformId:transformId
+                   transform:transform
+                  completion:completion];
+}
+
+- (void)yy_setImageWithURL:(NSURL *)imageURL
+               placeholder:(UIImage *)placeholder
+                   options:(YYWebImageOptions)options
+                   manager:(YYWebImageManager *)manager
+                  progress:(YYWebImageProgressBlock)progress
+               transformId:(NSString *)transformId
+                 transform:(YYWebImageTransformBlock)transform
+                completion:(YYWebImageCompletionBlock)completion {
     if ([imageURL isKindOfClass:[NSString class]]) imageURL = [NSURL URLWithString:(id)imageURL];
     manager = manager ? manager : [YYWebImageManager sharedManager];
     
@@ -172,8 +208,8 @@ static int _YYWebImageSetterKey;
                     }
                 });
             };
-#warning 这里没有修改类型
-            newSentinel = [setter setOperationWithSentinel:sentinel url:imageURL options:options manager:manager progress:_progress transformType:0 transform:transform completion:_completion];
+
+            newSentinel = [setter setOperationWithSentinel:sentinel url:imageURL options:options manager:manager progress:_progress transformId:transformId transform:transform completion:_completion];
             weakSetter = setter;
         });
         

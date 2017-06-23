@@ -48,7 +48,7 @@ const NSTimeInterval _YYWebImageProgressiveFadeTime = 0.4;
                             options:(YYWebImageOptions)options
                             manager:(YYWebImageManager *)manager
                            progress:(YYWebImageProgressBlock)progress
-                      transformType:(NSUInteger)transformType
+                        transformId:(NSString *)transformId
                           transform:(YYWebImageTransformBlock)transform
                          completion:(YYWebImageCompletionBlock)completion {
     if (sentinel != _sentinel) {
@@ -56,7 +56,7 @@ const NSTimeInterval _YYWebImageProgressiveFadeTime = 0.4;
         return _sentinel;
     }
     
-    NSOperation *operation = [manager requestImageWithURL:imageURL options:options progress:progress transformType:transformType transform:transform completion:completion];
+    NSOperation *operation = [manager requestImageWithURL:imageURL options:options progress:progress transformId:transformId transform:transform completion:completion];
     
     if (!operation && completion) {
         NSDictionary *userInfo = @{ NSLocalizedDescriptionKey : @"YYWebImageOperation create failed." };

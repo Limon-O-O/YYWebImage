@@ -50,7 +50,7 @@ extern const NSTimeInterval _YYWebImageProgressiveFadeTime;
                             options:(YYWebImageOptions)options
                             manager:(YYWebImageManager *)manager
                            progress:(nullable YYWebImageProgressBlock)progress
-                      transformType:(NSUInteger)transformType
+                        transformId:(nullable NSString *)transformId
                           transform:(nullable YYWebImageTransformBlock)transform
                          completion:(nullable YYWebImageCompletionBlock)completion;
 

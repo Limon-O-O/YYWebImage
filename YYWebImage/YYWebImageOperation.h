@@ -87,7 +87,7 @@ NS_ASSUME_NONNULL_BEGIN
                           cache:(nullable YYImageCache *)cache
                        cacheKey:(nullable NSString *)cacheKey
                        progress:(nullable YYWebImageProgressBlock)progress
-                  transformType:(NSUInteger)transformType
+                    transformId:(nullable NSString *)transformId
                       transform:(nullable YYWebImageTransformBlock)transform
                      completion:(nullable YYWebImageCompletionBlock)completion NS_DESIGNATED_INITIALIZER;
 

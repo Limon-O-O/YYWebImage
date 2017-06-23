@@ -89,11 +89,22 @@ static int _YYWebImageHighlightedSetterKey;
                   completion:completion];
 }
 
+- (void)yy_setImageWithURL:(NSURL *)imageURL placeholder:(UIImage *)placeholder options:(YYWebImageOptions)options manager:(YYWebImageManager *)manager progress:(YYWebImageProgressBlock)progress transform:(YYWebImageTransformBlock)transform completion:(YYWebImageCompletionBlock)completion {
+    [self yy_setImageWithURL:imageURL
+                 placeholder:placeholder
+                     options:options
+                     manager:manager
+                    progress:progress
+                 transformId:@"0"
+                   transform:transform
+                  completion:completion];
+}
+
 - (void)yy_setImageWithURL:(nullable NSURL *)imageURL
                placeholder:(nullable UIImage *)placeholder
                    options:(YYWebImageOptions)options
                   progress:(nullable YYWebImageProgressBlock)progress
-             transformType:(NSUInteger)transformType
+               transformId:(nullable NSString *)transformId
                  transform:(nullable YYWebImageTransformBlock)transform
                 completion:(nullable YYWebImageCompletionBlock)completion {
     [self yy_setImageWithURL:imageURL
@@ -101,7 +112,7 @@ static int _YYWebImageHighlightedSetterKey;
                      options:options
                      manager:nil
                     progress:progress
-               transformType:transformType
+                 transformId:transformId
                    transform:transform
                   completion:completion];
 }
@@ -111,24 +122,7 @@ static int _YYWebImageHighlightedSetterKey;
                    options:(YYWebImageOptions)options
                    manager:(YYWebImageManager *)manager
                   progress:(YYWebImageProgressBlock)progress
-                 transform:(YYWebImageTransformBlock)transform
-                completion:(YYWebImageCompletionBlock)completion {
-    
-    [self yy_setImageWithURL:imageURL
-                 placeholder:placeholder
-                     options:options
-                     manager:manager
-                    progress:progress
-               transformType:0
-                   transform:transform
-                  completion:completion];
-}
-- (void)yy_setImageWithURL:(NSURL *)imageURL
-               placeholder:(UIImage *)placeholder
-                   options:(YYWebImageOptions)options
-                   manager:(YYWebImageManager *)manager
-                  progress:(YYWebImageProgressBlock)progress
-             transformType:(NSUInteger)transformType
+               transformId:(NSString *)transformId
                  transform:(YYWebImageTransformBlock)transform
                 completion:(YYWebImageCompletionBlock)completion {
     if ([imageURL isKindOfClass:[NSString class]]) imageURL = [NSURL URLWithString:(id)imageURL];
@@ -161,17 +155,18 @@ static int _YYWebImageHighlightedSetterKey;
         if (manager.cache &&
             !(options & YYWebImageOptionUseNSURLCache) &&
             !(options & YYWebImageOptionRefreshImageCache)) {
-            if (transform) {
-                NSString *suffix = [NSString stringWithFormat:@"_%@", @(transformType)];
-                NSString *cacheKey = [[manager cacheKeyForURL:imageURL] stringByAppendingString:suffix];
+            if (transform && transformId) {
+                NSString *cacheKey = [[manager cacheKeyForURL:imageURL] stringByAppendingString:transformId];
                 imageFromMemory = [manager.cache getImageForKey:cacheKey withType:YYImageCacheTypeMemory];
-//                if (imageFromMemory == nil) {
-//                    imageFromMemory = [manager.cache getImageForKey:[manager cacheKeyForURL:imageURL] withType:YYImageCacheTypeMemory];
-//                    if (imageFromMemory) {
-//                        imageFromMemory = transform(imageFromMemory, imageURL);
-//                        [manager.cache setImage:imageFromMemory forKey:cacheKey];
-//                    }
-//                }
+                if (imageFromMemory == nil) {
+                    //If you do not here for the transform to the image, try to get the original image in the transform
+                    imageFromMemory = [manager.cache getImageForKey:[manager cacheKeyForURL:imageURL] withType:YYImageCacheTypeMemory];
+                    if (imageFromMemory) {
+                        imageFromMemory = transform(imageFromMemory, imageURL);
+                        //Cache transform Image
+                        [manager.cache setImage:imageFromMemory forKey:cacheKey];
+                    }
+                }
             }
             else {
                 imageFromMemory = [manager.cache getImageForKey:[manager cacheKeyForURL:imageURL] withType:YYImageCacheTypeMemory];
@@ -214,7 +209,7 @@ static int _YYWebImageHighlightedSetterKey;
                             transition.type = kCATransitionFade;
                             [self.layer addAnimation:transition forKey:_YYWebImageFadeAnimationKey];
                         }
-
+                        //Here will get a good picture, can be directly displayed
                         self.image = image;
                     }
                     if (completion) {
@@ -227,7 +222,7 @@ static int _YYWebImageHighlightedSetterKey;
                 });
             };
             
-            newSentinel = [setter setOperationWithSentinel:sentinel url:imageURL options:options manager:manager progress:_progress transformType:transformType transform:transform completion:_completion];
+            newSentinel = [setter setOperationWithSentinel:sentinel url:imageURL options:options manager:manager progress:_progress transformId:transformId transform:transform completion:_completion];
             
             weakSetter = setter;
         });
@@ -312,6 +307,41 @@ static int _YYWebImageHighlightedSetterKey;
                              progress:(YYWebImageProgressBlock)progress
                             transform:(YYWebImageTransformBlock)transform
                            completion:(YYWebImageCompletionBlock)completion {
+    [self yy_setHighlightedImageWithURL:imageURL
+                            placeholder:placeholder
+                                options:options
+                                manager:manager
+                               progress:progress
+                            transformId:@"0"
+                              transform:transform
+                             completion:completion];
+}
+
+- (void)yy_setHighlightedImageWithURL:(NSURL *)imageURL
+                          placeholder:(UIImage *)placeholder
+                              options:(YYWebImageOptions)options
+                             progress:(YYWebImageProgressBlock)progress
+                          transformId:(NSString *)transformId
+                            transform:(YYWebImageTransformBlock)transform
+                           completion:(YYWebImageCompletionBlock)completion {
+    [self yy_setHighlightedImageWithURL:imageURL
+                            placeholder:placeholder
+                                options:options
+                                manager:nil
+                               progress:progress
+                            transformId:transformId
+                              transform:transform
+                             completion:completion];
+}
+
+- (void)yy_setHighlightedImageWithURL:(NSURL *)imageURL
+                          placeholder:(UIImage *)placeholder
+                              options:(YYWebImageOptions)options
+                              manager:(YYWebImageManager *)manager
+                             progress:(YYWebImageProgressBlock)progress
+                          transformId:(nullable NSString *)transformId
+                            transform:(YYWebImageTransformBlock)transform
+                           completion:(YYWebImageCompletionBlock)completion {
     if ([imageURL isKindOfClass:[NSString class]]) imageURL = [NSURL URLWithString:(id)imageURL];
     manager = manager ? manager : [YYWebImageManager sharedManager];
     
@@ -341,8 +371,26 @@ static int _YYWebImageHighlightedSetterKey;
         if (manager.cache &&
             !(options & YYWebImageOptionUseNSURLCache) &&
             !(options & YYWebImageOptionRefreshImageCache)) {
-            imageFromMemory = [manager.cache getImageForKey:[manager cacheKeyForURL:imageURL] withType:YYImageCacheTypeMemory];
+            
+            if (transform && transformId) {
+                NSString *cacheKey = [[manager cacheKeyForURL:imageURL] stringByAppendingString:transformId];
+                imageFromMemory = [manager.cache getImageForKey:cacheKey withType:YYImageCacheTypeMemory];
+                if (imageFromMemory == nil) {
+                    //If you do not here for the transform to the image, try to get the original image in the transform
+                    imageFromMemory = [manager.cache getImageForKey:[manager cacheKeyForURL:imageURL] withType:YYImageCacheTypeMemory];
+                    if (imageFromMemory) {
+                        imageFromMemory = transform(imageFromMemory, imageURL);
+                        //Cache transform Image
+                        [manager.cache setImage:imageFromMemory forKey:cacheKey];
+                    }
+                }
+            }
+            else {
+                imageFromMemory = [manager.cache getImageForKey:[manager cacheKeyForURL:imageURL] withType:YYImageCacheTypeMemory];
+            }
         }
+        
+
         if (imageFromMemory) {
             if (!(options & YYWebImageOptionAvoidSetImage)) {
                 self.highlightedImage = imageFromMemory;
@@ -391,9 +439,8 @@ static int _YYWebImageHighlightedSetterKey;
                     }
                 });
             };
-            
-#warning 这里没有修改类型
-            newSentinel = [setter setOperationWithSentinel:sentinel url:imageURL options:options manager:manager progress:_progress transformType:0 transform:transform completion:_completion];
+
+            newSentinel = [setter setOperationWithSentinel:sentinel url:imageURL options:options manager:manager progress:_progress transformId:transformId transform:transform completion:_completion];
             weakSetter = setter;
         });
     });

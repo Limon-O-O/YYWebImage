@@ -97,6 +97,7 @@
                                   _self.progressLayer.strokeEnd = progress;
                               }
                           }
+                          transformId:nil
                           transform:nil
                           completion:^(UIImage *image, NSURL *url, YYWebImageFromType from, YYWebImageStage stage, NSError *error) {
                               if (stage == YYWebImageStageFinished) {
