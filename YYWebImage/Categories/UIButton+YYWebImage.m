@@ -378,7 +378,7 @@ static int _YYWebImageBackgroundSetterKey;
                 });
             };
             
-            newSentinel = [setter setOperationWithSentinel:sentinel url:imageURL options:options manager:manager progress:_progress transformId:nil transform:transform completion:_completion];
+            newSentinel = [setter setOperationWithSentinel:sentinel url:imageURL options:options manager:manager progress:_progress transformId:transformId transform:transform completion:_completion];
             weakSetter = setter;
         });
     });
