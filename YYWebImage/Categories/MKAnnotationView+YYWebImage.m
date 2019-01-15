@@ -163,15 +163,6 @@ static int _YYWebImageSetterKey;
             if (transform && transformId) {
                 NSString *cacheKey = [[manager cacheKeyForURL:imageURL] stringByAppendingString:transformId];
                 imageFromMemory = [manager.cache getImageForKey:cacheKey withType:YYImageCacheTypeMemory];
-                if (imageFromMemory == nil) {
-                    //If you do not here for the transform to the image, try to get the original image in the transform
-                    imageFromMemory = [manager.cache getImageForKey:[manager cacheKeyForURL:imageURL] withType:YYImageCacheTypeMemory];
-                    if (imageFromMemory) {
-                        imageFromMemory = transform(imageFromMemory, imageURL);
-                        //Cache transform Image
-                        [manager.cache setImage:imageFromMemory forKey:cacheKey];
-                    }
-                }
             }
             else {
                 imageFromMemory = [manager.cache getImageForKey:[manager cacheKeyForURL:imageURL] withType:YYImageCacheTypeMemory];
