@@ -324,33 +324,20 @@ static void URLInBlackListAdd(NSURL *url) {
 - (void)_startOperation {
     if ([self isCancelled]) return;
     @autoreleasepool {
-        
+
         // get image from cache
         if (_cache &&
             !(_options & YYWebImageOptionUseNSURLCache) &&
             !(_options & YYWebImageOptionRefreshImageCache)) {
-            
+
             UIImage *image = nil;
-            
-            //尝试从Disk里面提取
-            //Try to extract oil from the Disk
-            if (!(_options & YYWebImageOptionIgnoreDiskCache) &&
-                _transform && _transformCacheKey) {
-                //前面为了快速显示图片，只是从内存里面尝试提取图片
-                //Front to display images quickly, just try to extract oil from the memory images
-                image = [_cache getImageForKey:_transformCacheKey withType:YYImageCacheTypeDisk];
-            }
-            
-            if (image == nil) {
+
+            if (_transform && _transformCacheKey) {
+                image = [_cache getImageForKey:_transformCacheKey withType:YYImageCacheTypeMemory];
+            } else {
                 image = [_cache getImageForKey:_cacheKey withType:YYImageCacheTypeMemory];
-                
-                if (_transform && image && _transformCacheKey) {
-                    image = _transform(image, _request.URL);
-                    [_cache setImage:image forKey:_transformCacheKey];
-                }
             }
-            
-            
+
             if (image) {
                 [_lock lock];
                 if (![self isCancelled]) {
@@ -360,27 +347,40 @@ static void URLInBlackListAdd(NSURL *url) {
                 [_lock unlock];
                 return;
             }
-            
+
             if (!(_options & YYWebImageOptionIgnoreDiskCache)) {
                 __weak typeof(self) _self = self;
                 dispatch_async([self.class _imageQueue], ^{
                     __strong typeof(_self) self = _self;
                     if (!self || [self isCancelled]) return;
-                    UIImage *image = [self.cache getImageForKey:self.cacheKey withType:YYImageCacheTypeDisk];
 
-                    if (_transform && image && _transformCacheKey) {
-                        image = _transform(image, _request.URL);
-                        [_cache setImage:image forKey:_transformCacheKey];
-                    }
+                    if (self.transform && self.transformCacheKey) {
 
-                    if (image) {
-                        if (!(_transform && image && _transformCacheKey)) {
-                            [self.cache setImage:image imageData:nil forKey:self.cacheKey withType:YYImageCacheTypeMemory];
+                        // 先获取本地 transform 过的图片
+                        UIImage *image = [self.cache getImageForKey:self.transformCacheKey withType:YYImageCacheTypeDisk];
+
+                        if (image == nil) { // 如果本地没有 transform 过的图片，尝试用内存中拿原图，进行 transform，并存储到本地
+                            image = [self.cache getImageForKey:self.cacheKey withType:YYImageCacheTypeMemory];
+                            if (image) {
+                                image = self.transform(image, self.request.URL);
+                                [self.cache setImage:image imageData:nil forKey:self.transformCacheKey withType:YYImageCacheTypeDisk];
+                            }
                         }
-                        
-                        [self performSelector:@selector(_didReceiveImageFromDiskCache:) onThread:[self.class _networkThread] withObject:image waitUntilDone:NO];
+
+                        if (image) {
+                            [self.cache setImage:image imageData:nil forKey:self.transformCacheKey withType:YYImageCacheTypeMemory];
+                            [self performSelector:@selector(_didReceiveImageFromDiskCache:) onThread:[self.class _networkThread] withObject:image waitUntilDone:NO];
+                        } else {
+                            [self performSelector:@selector(_startRequest:) onThread:[self.class _networkThread] withObject:nil waitUntilDone:NO];
+                        }
                     } else {
-                        [self performSelector:@selector(_startRequest:) onThread:[self.class _networkThread] withObject:nil waitUntilDone:NO];
+                        UIImage *image = [self.cache getImageForKey:self.cacheKey withType:YYImageCacheTypeDisk];
+                        if (image) {
+                            [self.cache setImage:image imageData:nil forKey:self.cacheKey withType:YYImageCacheTypeMemory];
+                            [self performSelector:@selector(_didReceiveImageFromDiskCache:) onThread:[self.class _networkThread] withObject:image waitUntilDone:NO];
+                        } else {
+                            [self performSelector:@selector(_startRequest:) onThread:[self.class _networkThread] withObject:nil waitUntilDone:NO];
+                        }
                     }
                 });
                 return;
