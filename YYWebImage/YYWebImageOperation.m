@@ -747,13 +747,24 @@ static void URLInBlackListAdd(NSURL *url) {
                     if ([self isCancelled]) return;
                     
                     // images : "webImage", "transformImage"
-                    NSDictionary *images = @{@"webImage": image, @"transformImage":newImage};
+                    NSMutableDictionary *images = [[NSMutableDictionary alloc] init];
+                    if (image) {
+                        [images setObject:image forKey:@"webImage"];
+                    }
+
+                    if (newImage) {
+                        [images setObject:newImage forKey:@"transformImage"];
+                    }
+
                     [self performSelector:@selector(_didReceiveImageFromWeb:) onThread:[self.class _networkThread] withObject:images waitUntilDone:NO];
                 }
                 else {
-                    // images : "webImage", "transformImage"
-                    NSDictionary *images = @{@"webImage": image};
-                    [self performSelector:@selector(_didReceiveImageFromWeb:) onThread:[self.class _networkThread] withObject:images waitUntilDone:NO];
+                    if (image) {
+                        NSDictionary *images = @{@"webImage": image};
+                        [self performSelector:@selector(_didReceiveImageFromWeb:) onThread:[self.class _networkThread] withObject:images waitUntilDone:NO];
+                    } else {
+                        [self performSelector:@selector(_didReceiveImageFromWeb:) onThread:[self.class _networkThread] withObject:@{} waitUntilDone:NO];
+                    }
                 }
             });
             if (![self.request.URL isFileURL] && (self.options & YYWebImageOptionShowNetworkActivity)) {
