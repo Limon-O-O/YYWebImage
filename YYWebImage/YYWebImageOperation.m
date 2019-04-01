@@ -468,10 +468,14 @@ static void URLInBlackListAdd(NSURL *url) {
                     NSData *data = _data;
                     dispatch_async([YYWebImageOperation _imageQueue], ^{
                         YYImageCacheType cacheType = (_options & YYWebImageOptionIgnoreDiskCache) ? YYImageCacheTypeMemory : YYImageCacheTypeAll;
-                        [_cache setImage:image imageData:data forKey:_cacheKey withType:cacheType];
                         if (transformImage) {
-                            [_cache setImage:transformImage imageData:nil forKey:_transformCacheKey withType:cacheType];
+                            YYImageCacheType transformCacheType = (_options & YYWebImageOptionIgnoreDiskCache) ? YYImageCacheTypeMemory : YYImageCacheTypeAll;
+                            [_cache setImage:transformImage imageData:nil forKey:_transformCacheKey withType:transformCacheType];
+
+                            // 如果有 transform，原图不存在 memory 内
+                            cacheType = (_options & YYWebImageOptionIgnoreDiskCache) ? YYImageCacheTypeNone : YYImageCacheTypeDisk;
                         }
+                        [_cache setImage:image imageData:data forKey:_cacheKey withType:cacheType];
                     });
                 }
             }
