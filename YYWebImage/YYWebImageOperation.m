@@ -356,14 +356,16 @@ static void URLInBlackListAdd(NSURL *url) {
 
                     if (self.transform && self.transformCacheKey) {
 
-                        // 先获取本地 transform 过的图片
+                        // 先获取磁盘 transform 过的图片
                         UIImage *image = [self.cache getImageForKey:self.transformCacheKey withType:YYImageCacheTypeDisk];
 
-                        if (image == nil) { // 如果本地没有 transform 过的图片，尝试用内存中拿原图，进行 transform，并存储到本地
-                            image = [self.cache getImageForKey:self.cacheKey withType:YYImageCacheTypeMemory];
+                        if (image == nil) { // 如果磁盘没有 transform 过的图片，尝试用内存或磁盘中拿原图，进行 transform，并存储到本地
+                            image = [self.cache getImageForKey:self.cacheKey withType:YYImageCacheTypeAll];
                             if (image) {
                                 image = self.transform(image, self.request.URL);
-                                [self.cache setImage:image imageData:nil forKey:self.transformCacheKey withType:YYImageCacheTypeDisk];
+                                if (image) {
+                                    [self.cache setImage:image imageData:nil forKey:self.transformCacheKey withType:YYImageCacheTypeDisk];
+                                }
                             }
                         }
 
