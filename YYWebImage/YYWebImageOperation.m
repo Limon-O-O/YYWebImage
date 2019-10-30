@@ -241,13 +241,14 @@ static void URLInBlackListAdd(NSURL *url) {
 
 - (instancetype)init {
     @throw [NSException exceptionWithName:@"YYWebImageOperation init error" reason:@"YYWebImageOperation must be initialized with a request. Use the designated initializer to init." userInfo:nil];
-    return [self initWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@""]] options:0 cache:nil cacheKey:nil progress:nil transformId:nil transform:nil completion:nil];
+    return [self initWithRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@""]] options:0 cache:nil cacheKey:nil originalCacheKey:nil progress:nil transformId:nil transform:nil completion:nil];
 }
 
 - (instancetype)initWithRequest:(NSURLRequest *)request
                         options:(YYWebImageOptions)options
                           cache:(nullable YYImageCache *)cache
                        cacheKey:(nullable NSString *)cacheKey
+               originalCacheKey:(nullable NSString *)originalCacheKey
                        progress:(nullable YYWebImageProgressBlock)progress
                     transformId:(NSString *)transformId
                       transform:(nullable YYWebImageTransformBlock)transform
@@ -259,6 +260,7 @@ static void URLInBlackListAdd(NSURL *url) {
     _options = options;
     _cache = cache;
     _cacheKey = cacheKey ? cacheKey : request.URL.absoluteString;
+    _originalCacheKey = originalCacheKey ? originalCacheKey : request.URL.absoluteString;
     _shouldUseCredentialStorage = YES;
     _progress = progress;
     _transform = transform;
@@ -361,6 +363,12 @@ static void URLInBlackListAdd(NSURL *url) {
 
                         if (image == nil) { // 如果磁盘没有 transform 过的图片，尝试用内存或磁盘中拿原图，进行 transform，并存储到本地
                             image = [self.cache getImageForKey:self.cacheKey withType:YYImageCacheTypeAll];
+
+                            // 尝试获取最原始的图片再进行 transform
+                            if (image == nil && ![self.cacheKey isEqualToString:self.originalCacheKey]) {
+                                image = [self.cache getImageForKey:self.originalCacheKey withType:YYImageCacheTypeAll];
+                            }
+
                             if (image) {
                                 image = self.transform(image, self.request.URL);
                                 if (image) {

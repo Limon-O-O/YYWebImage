@@ -262,6 +262,13 @@ typedef void (^YYWebImageCompletionBlock)(UIImage * _Nullable image,
 @property (nullable, nonatomic, copy) NSString *(^cacheKeyFilter)(NSURL *url);
 
 /**
+ A block which will be invoked for each image operation. Default is nil.
+
+ Use this block to provide a custom original image cache key for a specified URL.
+ */
+@property (nullable, nonatomic, copy) NSString *(^originalCacheKeyFilter)(NSURL *url);
+
+/**
  Returns the HTTP headers for a specified URL.
  
  @param url A specified URL.

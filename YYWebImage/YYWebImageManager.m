@@ -96,6 +96,7 @@ static UIApplication *_YYSharedApplication() {
                                                                           options:options
                                                                             cache:_cache
                                                                          cacheKey:[self cacheKeyForURL:url]
+                                                                 originalCacheKey:[self originalCacheKeyForURL:url]
                                                                          progress:progress
                                                                       transformId:transformId
                                                                         transform:transform ? transform : _sharedTransformBlock
@@ -125,6 +126,10 @@ static UIApplication *_YYSharedApplication() {
     return _cacheKeyFilter ? _cacheKeyFilter(url) : url.absoluteString;
 }
 
+- (NSString *)originalCacheKeyForURL:(NSURL *)url {
+    if (!url) return nil;
+    return _originalCacheKeyFilter ? _originalCacheKeyFilter(url) : url.absoluteString;
+}
 
 
 #pragma mark Network Indicator
